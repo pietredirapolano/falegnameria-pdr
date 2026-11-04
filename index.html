@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gestione Lavori Falegnameria</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;background:#f4efe9;color:#222}
+header{background:#5b3a1e;color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+header h1{margin:0;font-size:20px}
+header .today{font-size:14px;opacity:.9}
+nav{background:#7a5230;display:flex;flex-wrap:wrap}
+nav button{background:none;border:0;color:#fff;padding:12px 18px;font-size:15px;cursor:pointer;border-bottom:4px solid transparent}
+nav button:hover{background:#8d6139}
+nav button.active{background:#f4efe9;color:#5b3a1e;font-weight:700}
+main{padding:20px;max-width:1250px;margin:0 auto}
+.tab{display:none}.tab.active{display:block}
+.panel{background:#fff;border-radius:8px;padding:18px 20px;margin-bottom:18px;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+h2{margin:0 0 12px;font-size:19px;color:#5b3a1e}
+h3{margin:0 0 8px;font-size:16px}
+label{display:block;font-weight:600;font-size:13px;margin-bottom:4px;color:#444}
+input,select,button.btn{font:inherit}
+input[type=text],input[type=password],input[type=date],input[type=number],select{width:100%;padding:9px 10px;border:1px solid #bbb;border-radius:6px;background:#fff}
+input:focus,select:focus{outline:2px solid #b07a3c;border-color:#b07a3c}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));align-items:end}
+.btn{background:#5b3a1e;color:#fff;border:0;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#7a5230}
+.btn.sec{background:#e5dccf;color:#3b2512}.btn.sec:hover{background:#d6c9b5}
+.btn.red{background:#b00020}.btn.red:hover{background:#8e001a}
+.btn.green{background:#1b6e2d}.btn.green:hover{background:#145522}
+.btn.sm{padding:5px 10px;font-size:13px}
+table{width:100%;border-collapse:collapse;margin:8px 0}
+th,td{border:1px solid #cfc6ba;padding:7px 9px;text-align:left;vertical-align:top}
+th{background:#ece3d6;font-size:13px}
+td.num,th.num{text-align:right;white-space:nowrap}
+tr.tot td{font-weight:700;background:#f7f2ea}
+.over{color:#c00000;font-weight:700}
+td.over{background:#fde8e8}
+.ok{color:#1b6e2d;font-weight:600}
+.flash{background:#e4f5e8;border:1px solid #8fd09e;color:#1b5e2a;padding:10px 14px;border-radius:6px;margin-bottom:14px;font-weight:600}
+.warn{background:#fff6dd;border:1px solid #e3c766;padding:10px 14px;border-radius:6px;margin-bottom:14px}
+.cards{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.card{border:2px solid #cfc6ba;border-radius:8px;padding:14px 16px;background:#fcfaf6}
+.card.cover{border-color:#c00000;background:#fff1f1}
+.card .r{display:flex;justify-content:space-between;padding:4px 0;font-size:16px}
+.card .r.big{font-size:20px;border-top:1px solid #ddd;margin-top:6px;padding-top:8px}
+.card .r.big.over{color:#c00000}
+.bar{height:12px;background:#e5dccf;border-radius:6px;overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;background:#3c9a52}
+.bar i.bo{background:#c00000}
+.badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:12px;font-weight:700}
+.badge.open{background:#dff0e3;color:#1b6e2d}.badge.closed{background:#e4e4e4;color:#444}
+.row-actions{display:flex;gap:6px;flex-wrap:wrap}
+.split{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(380px,1fr))}
+.rep-head{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:2px solid #5b3a1e;padding-bottom:8px;margin-bottom:10px}
+.rep-title{font-size:22px;font-weight:700;color:#5b3a1e}
+.muted{color:#666;font-size:13px}
+.bigdate{font-size:17px;font-weight:700}
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:1000;padding:12px 20px;border-radius:8px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.3);display:none;max-width:90%}
+.toast.err{background:#b00020;color:#fff}.toast.ok{background:#1b6e2d;color:#fff}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1100;display:none;align-items:center;justify-content:center}
+.mbox{background:#fff;border-radius:10px;padding:20px;min-width:300px;max-width:90%}
+.mbtn{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.warn.bad{background:#fde8e8;border-color:#c00000;color:#7a0000}
+@media print{#toast,#modal,#warnbar{display:none!important}}
+@media print{
+ header,nav,.noprint{display:none!important}
+ body{background:#fff;font-size:11px}
+ .tab{display:none!important}.tab.active{display:block!important}
+ main{padding:0;max-width:none}
+ .panel{box-shadow:none;padding:0}
+ *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ th,td{padding:4px 6px}
+ h2{font-size:15px}
+}
+body.viewer nav button[data-tab=new],body.viewer nav button[data-tab=manage],body.viewer .edit-only,body.viewer #d-actions,body.viewer .row-actions button[onclick^="goManage"],body.viewer .row-actions button[onclick^="reopenProject"],body.viewer .row-actions button[onclick^="editProject"],body.viewer .row-actions button[onclick^="closeProject"]{display:none!important}
+#gate{display:none;position:fixed;inset:0;background:#f4efe9;z-index:2000;align-items:center;justify-content:center}
+</style>
+</head>
+<body>
+<header>
+ <h1>🪵 Gestione Lavori – Falegnameria</h1>
+ <div class="today"><span id="hdr-date"></span> <span id="hdr-user"></span></div>
+</header>
+<nav id="nav">
+ <button data-tab="new" onclick="showTab('new')">1. Nuovo lavoro</button>
+ <button data-tab="manage" onclick="showTab('manage')">2. Gestione lavoro</button>
+ <button data-tab="list" onclick="showTab('list')">Elenco lavori</button>
+ <button data-tab="summary" onclick="showTab('summary')">Report sintetico</button>
+ <button data-tab="detail" onclick="showTab('detail')">Report dettagliato</button>
+ <button data-tab="data" onclick="showTab('data')">Backup dati</button>
+</nav>
+<main>
+<div id="warnbar"></div>
+
+<!-- NUOVO LAVORO -->
+<section id="tab-new" class="tab">
+ <div class="panel">
+  <h2 id="n-title">Nuovo lavoro</h2>
+  <div id="n-flash"></div>
+  <div class="frm" data-submit="saveProject">
+   <input type="hidden" id="n-edit">
+   <div class="grid">
+    <div><label>Numero progressivo</label><input type="text" id="n-num" disabled></div>
+    <div style="grid-column:span 2"><label>Nome progetto *</label><input type="text" id="n-name" required></div>
+    <div style="grid-column:span 2"><label>Nome cliente *</label><input type="text" id="n-client" required></div>
+   </div>
+   <div class="grid" style="margin-top:14px">
+    <div><label>Opportunità n.</label><input type="text" id="n-opp"></div>
+    <div><label>Conferma d'ordine n.</label><input type="text" id="n-conf"></div>
+    <div><label>Data inizio lavoro *</label><input type="date" id="n-start" required></div>
+    <div><label>Ore previste per lavorazioni *</label><input type="text" inputmode="decimal" id="n-hours" placeholder="es. 40"></div>
+    <div><label>Costi materiali previsti (€) *</label><input type="text" inputmode="decimal" id="n-cost" placeholder="es. 1500"></div>
+    <div style="display:flex;gap:8px"><button class="btn" type="button" id="n-btn" onclick="saveProject()">Crea lavoro</button><button class="btn sec" type="button" id="n-cancel" style="display:none" onclick="resetNew()">Annulla modifica</button></div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- GESTIONE -->
+<section id="tab-manage" class="tab">
+ <div class="panel">
+  <h2>Gestione lavoro</h2>
+  <label>Lavoro su cui inserire dati (solo lavori in corso)</label>
+  <select id="g-project" onchange="manageId=+this.value;cancelEdit();drawManage()"></select>
+  <div id="g-empty" class="warn" style="display:none;margin-top:12px">Nessun lavoro in corso. Crea un nuovo lavoro oppure riapri uno chiuso dall'<a href="#" onclick="showTab('list');return false">Elenco lavori</a>.</div>
+ </div>
+ <div id="g-body">
+  <div class="panel"><div id="g-live"></div></div>
+  <div class="split">
+   <div class="panel">
+    <h2>⏱ Ore lavorate</h2>
+    <div class="frm" data-submit="addHour">
+     <div class="grid">
+      <div><label>Data *</label><input type="date" id="h-date" required></div>
+      <div><label>Addetto *</label><select id="h-worker" onchange="workerChanged()" required></select></div>
+      <div><label>Ore lavorate *</label><input type="text" inputmode="decimal" id="h-hours" placeholder="es. 7,5"></div>
+      <div><div style="display:flex;gap:6px"><button class="btn green" type="button" id="h-btn" onclick="addHour()">Registra ore</button><button class="btn sec" type="button" id="h-cancel" style="display:none" onclick="cancelEdit()">Annulla</button></div></div>
+     </div>
+    </div>
+    <div id="g-hours"></div>
+   </div>
+   <div class="panel">
+    <h2>🧾 Spese sostenute</h2>
+    <div class="frm" data-submit="addExp">
+     <div class="grid">
+      <div><label>Data *</label><input type="date" id="e-date" required></div>
+      <div><label>Importo (€) *</label><input type="text" inputmode="decimal" id="e-amount" placeholder="es. 120,50"></div>
+      <div><label>Di cosa si tratta * <span class="muted">(scegli o scrivi nuovo)</span></label><input type="text" id="e-what" list="dl-what" required></div>
+      <div><label>Fornitore * <span class="muted">(scegli o scrivi nuovo)</span></label><input type="text" id="e-supplier" list="dl-sup" required></div>
+      <div><label>N. fattura fornitore</label><input type="text" id="e-invoice"></div>
+      <div><label>N. DDT fornitore</label><input type="text" id="e-ddt"></div>
+      <div><div style="display:flex;gap:6px"><button class="btn green" type="button" id="e-btn" onclick="addExp()">Registra spesa</button><button class="btn sec" type="button" id="e-cancel" style="display:none" onclick="cancelEdit()">Annulla</button></div></div>
+     </div>
+     <datalist id="dl-what"></datalist><datalist id="dl-sup"></datalist>
+    </div>
+    <div id="g-exp"></div>
+   </div>
+  </div>
+  <div class="panel noprint">
+   <h2>Fine lavoro</h2>
+   <p class="muted">Chiudendo il lavoro verrà mostrato il report finale con gli scostamenti. Il lavoro potrà essere riaperto in qualsiasi momento.</p>
+   <button class="btn red" onclick="closeProject(manageId)">✔ Chiudi lavoro e mostra report</button>
+  </div>
+ </div>
+</section>
+
+<!-- ELENCO -->
+<section id="tab-list" class="tab">
+ <div class="panel">
+  <h2>Elenco lavori</h2>
+  <div style="max-width:260px;margin-bottom:10px"><label>Mostra</label>
+   <select id="l-filter" onchange="renderList()"><option value="all">Tutti</option><option value="open">In corso</option><option value="closed">Chiusi</option></select></div>
+  <div id="l-table"></div>
+ </div>
+</section>
+
+<!-- REPORT SINTETICO -->
+<section id="tab-summary" class="tab">
+ <div class="panel">
+  <div class="noprint" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:14px">
+   <div style="min-width:240px"><label>Tipo di report</label>
+    <select id="s-filter" onchange="renderSumReport()"><option value="open">Lavori in corso</option><option value="closed">Lavori chiusi</option></select></div>
+   <button class="btn" onclick="window.print()">🖨 Stampa</button>
+  </div>
+  <div id="s-report"></div>
+ </div>
+</section>
+
+<!-- REPORT DETTAGLIATO -->
+<section id="tab-detail" class="tab">
+ <div class="panel">
+  <div class="noprint" style="display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:14px">
+   <div style="min-width:320px"><label>Lavoro</label><select id="d-project" onchange="detailId=+this.value;renderDetail()"></select></div>
+   <button class="btn" onclick="window.print()">🖨 Stampa</button>
+   <span id="d-actions" style="display:flex;gap:8px"></span>
+  </div>
+  <div id="d-report"></div>
+ </div>
+</section>
+
+<!-- BACKUP -->
+<section id="tab-data" class="tab">
+ <div class="panel">
+  <h2>Backup dei dati</h2>
+  <div class="warn" id="mode-note"></div>
+  <p><button class="btn" onclick="exportData()">⬇ Esporta backup (file)</button></p>
+  <p class="edit-only"><label>Ripristina da backup (sostituisce tutti i dati attuali)</label><input type="file" id="imp" accept=".json,application/json" onchange="importData(this)"></p>
+  <p class="muted" id="d-stats"></p>
+ </div>
+</section>
+
+</main>
+
+<div id="gate"><div class="panel" style="width:340px;max-width:92%">
+ <h2>🪵 Gestione Lavori</h2><div id="gate-msg" class="muted" style="margin-bottom:10px">Caricamento…</div>
+ <div id="gate-form" style="display:none">
+  <label>Email</label><input type="text" id="g-email" autocomplete="username">
+  <label style="margin-top:10px">Password</label><input type="password" id="g-pass" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+  <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn" onclick="doLogin()">Accedi</button><button class="btn sec" onclick="doReset()">Password dimenticata</button></div>
+ </div>
+ <button class="btn sec" id="gate-out" style="display:none;margin-top:10px" onclick="doLogout()">Esci</button>
+</div></div>
+<div id="toast" class="toast"></div>
+<div id="modal"></div>
+<script>
+const KEY='falegnameria_gestione_v1';
+let storageOK=(function(){try{localStorage.setItem('__t','1');localStorage.removeItem('__t');return true;}catch(e){return false;}})();
+let db=load();
+let manageId=null, detailId=null;
+
+function load(){
+ try{const r=localStorage.getItem(KEY);if(r){const d=JSON.parse(r);if(d&&Array.isArray(d.projects))return d;}}catch(e){}
+ return {nextId:1,projects:[],workers:[],whats:[],suppliers:[]};
+}
+function save(){
+ if(cloud){cloudSync();return;}
+ if(!storageOK)return;
+ try{localStorage.setItem(KEY,JSON.stringify(db));}
+ catch(e){storageOK=false;showWarn();}
+}
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{
+ let t=String(v==null?'':v).trim().replace(/\s/g,'').replace('€','');
+ if(!t)return NaN;
+ if(t.indexOf(',')>=0)t=t.replace(/\./g,'').replace(',','.');
+ else if(/^\d{1,3}(\.\d{3})+$/.test(t))t=t.replace(/\./g,'');
+ if(!/^-?\d*\.?\d+$/.test(t))return NaN;
+ return parseFloat(t);
+};
+const r2=x=>Math.round(x*100)/100;
+const nf=new Intl.NumberFormat('it-IT',{maximumFractionDigits:2});
+const ef=new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'});
+const fh=n=>nf.format(n)+' h';
+const fe=n=>ef.format(n);
+const pad=n=>String(n).padStart(3,'0');
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+let toastT=null;
+function notify(msg,type){
+ const t=$('#toast');t.className='toast '+(type||'err');t.textContent=msg;t.style.display='block';
+ clearTimeout(toastT);toastT=setTimeout(()=>{t.style.display='none';},type==='ok'?4000:9000);
+}
+function showWarn(){
+ $('#warnbar').innerHTML=storageOK?'':'<div class="warn bad"><b>⚠ ATTENZIONE: in questo ambiente i dati NON vengono salvati in modo permanente</b> (probabilmente stai usando un\'anteprima). Scarica il file e aprilo direttamente dal tuo computer con Chrome, Edge o Firefox (doppio clic sul file). Finché la pagina resta aperta i dati si vedono, ma alla chiusura andrebbero persi.</div>';
+}
+function dialog(msg,withInput,okText){
+ return new Promise(res=>{
+  const m=$('#modal');
+  m.innerHTML='<div class="mbox"><p>'+esc(msg)+'</p>'+(withInput?'<input type="text" id="m-in">':'')+'<div class="mbtn"><button class="btn sec" id="m-no">Annulla</button><button class="btn" id="m-ok">'+okText+'</button></div></div>';
+  m.style.display='flex';
+  const done=v=>{m.style.display='none';m.innerHTML='';res(v);};
+  $('#m-ok').onclick=()=>done(withInput?$('#m-in').value:true);
+  $('#m-no').onclick=()=>done(withInput?null:false);
+  if(withInput){const i=$('#m-in');i.focus();i.onkeydown=e=>{if(e.key==='Enter')$('#m-ok').click();};}
+ });
+}
+const ask=msg=>dialog(msg,false,'Conferma');
+const askText=msg=>dialog(msg,true,'OK');
+function todayISO(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function fd(iso){if(!iso)return '';const [y,m,d]=iso.split('-');return d+'/'+m+'/'+y;}
+const getP=id=>db.projects.find(p=>p.id===id);
+const sortedP=()=>db.projects.slice().sort((a,b)=>a.id-b.id);
+const label=p=>'N. '+pad(p.id)+' – '+p.name+' ('+p.client+')';
+
+function stats(p){
+ const hd=r2(p.hours.reduce((a,h)=>a+h.hours,0));
+ const cd=r2(p.expenses.reduce((a,e)=>a+e.amount,0));
+ return {hp:p.plannedHours,hd,hl:r2(p.plannedHours-hd),cp:p.plannedCost,cd,cl:r2(p.plannedCost-cd)};
+}
+function leftCell(left,f){
+ return left<-0.004?`<td class="num over">ESUBERO<br>${f(-left)}</td>`:`<td class="num">${f(left)}</td>`;
+}
+function diffText(diff,f,planned){
+ const pc=planned>0?' ('+(diff>0?'+':diff<0?'−':'')+nf.format(Math.abs(diff)/planned*100)+'%)':'';
+ if(diff>0.004)return `<span class="over">+${f(diff)} ESUBERO${pc}</span>`;
+ if(diff<-0.004)return `<span class="ok">−${f(-diff)} sotto il previsto${pc}</span>`;
+ return '<span class="ok">in linea con il previsto</span>';
+}
+
+/* ---------- navigazione ---------- */
+function showTab(t){
+ document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('active',e.id==='tab-'+t));
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+ ({new:renderNew,manage:renderManage,list:renderList,summary:renderSumReport,detail:renderDetail,data:renderData}[t]||function(){})();
+ window.scrollTo(0,0);
+}
+
+/* ---------- nuovo / modifica lavoro ---------- */
+function renderNew(){
+ if(!$('#n-edit').value){$('#n-num').value=pad(db.nextId);if(!$('#n-start').value)$('#n-start').value=todayISO();}
+}
+function resetNew(){
+ $('#n-edit').value='';['#n-name','#n-client','#n-opp','#n-conf','#n-hours','#n-cost'].forEach(s=>$(s).value='');
+ $('#n-start').value=todayISO();$('#n-num').value=pad(db.nextId);
+ $('#n-title').textContent='Nuovo lavoro';$('#n-btn').textContent='Crea lavoro';$('#n-cancel').style.display='none';
+}
+async function saveProject(){
+ const name=$('#n-name').value.trim(),client=$('#n-client').value.trim(),start=$('#n-start').value,opp=$('#n-opp').value.trim(),conf=$('#n-conf').value.trim();
+ const hp=num($('#n-hours').value),cp=num($('#n-cost').value);
+ const miss=[];if(!name)miss.push('nome progetto');if(!client)miss.push('nome cliente');if(!start)miss.push('data inizio');if(isNaN(hp)||hp<0)miss.push('ore previste (numero)');if(isNaN(cp)||cp<0)miss.push('costi materiali previsti (numero)');
+ if(miss.length){notify('Campi mancanti o non validi: '+miss.join(', ')+'.');return false;}
+ const editId=+$('#n-edit').value;
+ if(editId){
+  const p=getP(editId);p.name=name;p.client=client;p.opp=opp;p.conf=conf;p.start=start;p.plannedHours=r2(hp);p.plannedCost=r2(cp);save();
+  resetNew();$('#n-flash').innerHTML=`<div class="flash">✔ Lavoro N. ${pad(editId)} aggiornato.</div>`;
+ }else{
+  const id=await newId();
+  db.projects.push({id,name,client,opp,conf,start,plannedHours:r2(hp),plannedCost:r2(cp),status:'open',closedDate:null,hours:[],expenses:[]});
+  save();manageId=id;resetNew();notify('Lavoro N. '+pad(id)+' creato.','ok');
+  $('#n-flash').innerHTML=`<div class="flash">✔ Creato lavoro N. ${pad(id)} – ${esc(name)}. <a href="#" onclick="showTab('manage');return false">Vai alla gestione →</a></div>`;
+ }
+ return false;
+}
+function editProject(id){
+ const p=getP(id);showTab('new');
+ $('#n-edit').value=id;$('#n-num').value=pad(id);$('#n-name').value=p.name;$('#n-client').value=p.client;$('#n-opp').value=p.opp||'';$('#n-conf').value=p.conf||'';
+ $('#n-start').value=p.start;$('#n-hours').value=p.plannedHours;$('#n-cost').value=p.plannedCost;
+ $('#n-title').textContent='Modifica lavoro N. '+pad(id);$('#n-btn').textContent='Salva modifiche';$('#n-cancel').style.display='';
+ $('#n-flash').innerHTML='';
+}
+
+/* ---------- gestione ---------- */
+function refreshLists(){
+ $('#dl-what').innerHTML=db.whats.slice().sort((a,b)=>a.localeCompare(b,'it')).map(x=>`<option value="${esc(x)}">`).join('');
+ $('#dl-sup').innerHTML=db.suppliers.slice().sort((a,b)=>a.localeCompare(b,'it')).map(x=>`<option value="${esc(x)}">`).join('');
+}
+function fillWorkers(sel){
+ const s=$('#h-worker'),cur=sel||s.value;
+ s.innerHTML='<option value="">— scegli addetto —</option>'+db.workers.slice().sort((a,b)=>a.localeCompare(b,'it')).map(w=>`<option value="${esc(w)}">${esc(w)}</option>`).join('')+'<option value="__new__">➕ Nuovo addetto…</option>';
+ s.value=cur&&[...s.options].some(o=>o.value===cur)?cur:'';
+}
+async function workerChanged(){
+ const s=$('#h-worker');
+ if(s.value==='__new__'){
+  const n=((await askText('Nome del nuovo addetto:'))||'').trim();
+  if(n){if(!db.workers.some(w=>w.toLowerCase()===n.toLowerCase()))db.workers.push(n);save();
+   const ex=db.workers.find(w=>w.toLowerCase()===n.toLowerCase());fillWorkers(ex);}
+  else fillWorkers('');
+ }
+}
+function renderManage(flash){
+ const ops=sortedP().filter(p=>p.status==='open');
+ if(!ops.some(p=>p.id===manageId))manageId=ops.length?ops[0].id:null;
+ $('#g-project').innerHTML=ops.length?ops.map(p=>`<option value="${p.id}" ${p.id===manageId?'selected':''}>${esc(label(p))}</option>`).join(''):'<option value="">— nessun lavoro in corso —</option>';
+ $('#g-empty').style.display=ops.length?'none':'block';
+ $('#g-body').style.display=ops.length?'block':'none';
+ refreshLists();fillWorkers();
+ if(!ops.length)return;
+ if(!$('#h-date').value)$('#h-date').value=todayISO();
+ if(!$('#e-date').value)$('#e-date').value=todayISO();
+ drawManage(typeof flash==='string'?flash:'');
+}
+function card(title,lp,ld,plan,done,left,f){
+ const over=left<-0.004;
+ const pct=plan>0?Math.min(100,done/plan*100):(done>0?100:0);
+ return `<div class="card ${over?'cover':''}"><h3>${title}</h3>
+ <div class="r"><span>${lp}</span><b>${f(plan)}</b></div>
+ <div class="r"><span>${ld}</span><b>${f(done)}</b></div>
+ <div class="bar"><i class="${over?'bo':''}" style="width:${pct}%"></i></div>
+ ${over?`<div class="r big over"><span>⚠ IN ESUBERO</span><b>${f(-left)}</b></div>`:`<div class="r big"><span>Restanti</span><b>${f(left)}</b></div>`}</div>`;
+}
+function drawManage(flash){
+ const p=getP(manageId);if(!p)return;
+ const s=stats(p);
+ $('#g-live').innerHTML=(flash?`<div class="flash">✔ ${esc(flash)}</div>`:'')+
+  `<h2>N. ${pad(p.id)} – ${esc(p.name)} <span class="muted">· cliente: ${esc(p.client)}${p.opp?' · opportunità n. '+esc(p.opp):''}${p.conf?' · conferma d\'ordine n. '+esc(p.conf):''} · inizio ${fd(p.start)}</span></h2>
+  <div class="cards">${card('⏱ ORE','Ore previste','Ore lavorate',s.hp,s.hd,s.hl,fh)}${card('🧾 SPESE MATERIALI','Spese previste','Spese sostenute',s.cp,s.cd,s.cl,fe)}</div>`;
+ const hs=p.hours.slice().sort((a,b)=>b.date.localeCompare(a.date));
+ $('#g-hours').innerHTML=hs.length?`<table><tr><th>Data</th><th>Addetto</th><th class="num">Ore</th><th></th></tr>${hs.map(h=>`<tr><td>${fd(h.date)}</td><td>${esc(h.worker)}</td><td class="num">${nf.format(h.hours)}</td><td style="white-space:nowrap"><button class="btn sec sm" title="Correggi" onclick="startEditHour('${h.id}')">✎</button> <button class="btn red sm" title="Elimina" onclick="delHour('${h.id}')">✕</button></td></tr>`).join('')}</table>`:'<p class="muted">Nessuna ora registrata.</p>';
+ const es=p.expenses.slice().sort((a,b)=>b.date.localeCompare(a.date));
+ $('#g-exp').innerHTML=es.length?`<table><tr><th>Data</th><th>Cosa</th><th>Fornitore</th><th>Fatt.</th><th>DDT</th><th class="num">€</th><th></th></tr>${es.map(e=>`<tr><td>${fd(e.date)}</td><td>${esc(e.what)}</td><td>${esc(e.supplier)}</td><td>${esc(e.invoice)}</td><td>${esc(e.ddt)}</td><td class="num">${nf.format(e.amount)}</td><td style="white-space:nowrap"><button class="btn sec sm" title="Correggi" onclick="startEditExp('${e.id}')">✎</button> <button class="btn red sm" title="Elimina" onclick="delExp('${e.id}')">✕</button></td></tr>`).join('')}</table>`:'<p class="muted">Nessuna spesa registrata.</p>';
+}
+let editHour=null,editExp=null;
+function cancelEdit(){
+ editHour=null;editExp=null;
+ $('#h-btn').textContent='Registra ore';$('#h-cancel').style.display='none';$('#h-hours').value='';
+ $('#e-btn').textContent='Registra spesa';$('#e-cancel').style.display='none';
+ ['#e-amount','#e-what','#e-supplier','#e-invoice','#e-ddt'].forEach(s=>$(s).value='');
+ $('#h-date').value=todayISO();$('#e-date').value=todayISO();
+}
+function startEditHour(id){
+ const p=getP(manageId),h=p&&p.hours.find(x=>x.id===id);if(!h)return;
+ cancelEdit();editHour=id;
+ $('#h-date').value=h.date;fillWorkers(h.worker);$('#h-hours').value=String(h.hours).replace('.',',');
+ $('#h-btn').textContent='Salva modifica';$('#h-cancel').style.display='';
+ $('#h-hours').focus();notify('Modifica della registrazione ore: cambia i dati e premi "Salva modifica".','ok');
+}
+function startEditExp(id){
+ const p=getP(manageId),e=p&&p.expenses.find(x=>x.id===id);if(!e)return;
+ cancelEdit();editExp=id;
+ $('#e-date').value=e.date;$('#e-amount').value=String(e.amount).replace('.',',');$('#e-what').value=e.what;$('#e-supplier').value=e.supplier;$('#e-invoice').value=e.invoice||'';$('#e-ddt').value=e.ddt||'';
+ $('#e-btn').textContent='Salva modifica';$('#e-cancel').style.display='';
+ $('#e-amount').focus();notify('Modifica della spesa: cambia i dati e premi "Salva modifica".','ok');
+}
+function addHour(){
+ const p=getP(manageId),date=$('#h-date').value,w=$('#h-worker').value,h=num($('#h-hours').value);
+ if(!p||!date||!w||w==='__new__'||!(h>0)){notify('Compila data, addetto e ore (numero maggiore di zero).');return false;}
+ let msg;
+ const eh=editHour&&p.hours.find(x=>x.id===editHour);
+ if(eh){eh.date=date;eh.worker=w;eh.hours=r2(h);msg=`Modificata registrazione: ${nf.format(h)} ore di ${w} del ${fd(date)}`;}
+ else{p.hours.push({id:uid(),date,worker:w,hours:r2(h)});msg=`Registrate ${nf.format(h)} ore di ${w} del ${fd(date)}`;}
+ save();cancelEdit();$('#h-date').value=date;
+ drawManage(msg);
+ return false;
+}
+function addToList(arr,v){
+ const ex=arr.find(x=>x.toLowerCase()===v.toLowerCase());
+ if(ex)return ex;arr.push(v);return v;
+}
+function addExp(){
+ const p=getP(manageId),date=$('#e-date').value,amount=num($('#e-amount').value);
+ let what=$('#e-what').value.trim(),sup=$('#e-supplier').value.trim();
+ if(!p||!date||!what||!sup||!(amount>0)){notify('Compila data, importo (numero maggiore di zero), di cosa si tratta e fornitore.');return false;}
+ what=addToList(db.whats,what);sup=addToList(db.suppliers,sup);
+ const rec={date,amount:r2(amount),what,supplier:sup,invoice:$('#e-invoice').value.trim(),ddt:$('#e-ddt').value.trim()};
+ const ee=editExp&&p.expenses.find(x=>x.id===editExp);let msg;
+ if(ee){Object.assign(ee,rec);msg=`Modificata spesa: ${fe(amount)} (${what} – ${sup}) del ${fd(date)}`;}
+ else{p.expenses.push(Object.assign({id:uid()},rec));msg=`Registrata spesa di ${fe(amount)} (${what} – ${sup}) del ${fd(date)}`;}
+ save();refreshLists();cancelEdit();$('#e-date').value=date;
+ drawManage(msg);
+ return false;
+}
+async function delHour(id){
+ const p=getP(manageId);if(!p||!(await ask('Eliminare questa registrazione di ore?')))return;
+ {const q=getP(manageId)||p;q.hours=q.hours.filter(h=>h.id!==id);}if(editHour===id)cancelEdit();save();drawManage('Registrazione ore eliminata');
+}
+async function delExp(id){
+ const p=getP(manageId);if(!p||!(await ask('Eliminare questa spesa?')))return;
+ {const q=getP(manageId)||p;q.expenses=q.expenses.filter(e=>e.id!==id);}if(editExp===id)cancelEdit();save();drawManage('Spesa eliminata');
+}
+
+/* ---------- chiusura / riapertura ---------- */
+async function closeProject(id){
+ const p=getP(id);if(!p)return;
+ if(!(await ask('Chiudere il lavoro N. '+pad(p.id)+' – '+p.name+'?')))return;
+ {const q=getP(id)||p;q.status='closed';q.closedDate=todayISO();}save();
+ openDetail(id);
+}
+async function reopenProject(id){
+ const p=getP(id);if(!p)return;
+ if(!(await ask('Riaprire il lavoro N. '+pad(p.id)+' – '+p.name+' per inserire ulteriori dati?')))return;
+ {const q=getP(id)||p;q.status='open';q.closedDate=null;}save();manageId=id;showTab('manage');
+}
+function goManage(id){manageId=id;showTab('manage');}
+function openDetail(id){detailId=id;showTab('detail');}
+
+/* ---------- elenco ---------- */
+function renderList(){
+ const f=$('#l-filter').value;
+ const ps=sortedP().filter(p=>f==='all'||p.status===f);
+ $('#l-table').innerHTML=ps.length?`<table><tr><th>N.</th><th>Titolo</th><th>Cliente</th><th>Opportunità n.</th><th>Conferma d'ordine n.</th><th>Inizio</th><th>Stato</th><th>Azioni</th></tr>${ps.map(p=>`<tr><td>${pad(p.id)}</td><td>${esc(p.name)}</td><td>${esc(p.client)}</td><td>${esc(p.opp)}</td><td>${esc(p.conf)}</td><td>${fd(p.start)}</td><td>${p.status==='open'?'<span class="badge open">IN CORSO</span>':'<span class="badge closed">CHIUSO '+fd(p.closedDate)+'</span>'}</td><td><div class="row-actions">${p.status==='open'?`<button class="btn sm" onclick="goManage(${p.id})">Gestisci</button>`:`<button class="btn sm green" onclick="reopenProject(${p.id})">Riapri</button>`}<button class="btn sm sec" onclick="openDetail(${p.id})">Report dettagliato</button><button class="btn sm sec" onclick="editProject(${p.id})">Modifica dati</button>${p.status==='open'?`<button class="btn sm red" onclick="closeProject(${p.id})">Chiudi</button>`:''}</div></td></tr>`).join('')}</table>`:'<p class="muted">Nessun lavoro presente.</p>';
+}
+
+/* ---------- report sintetico ---------- */
+function renderSumReport(){
+ const f=$('#s-filter').value;
+ const ps=sortedP().filter(p=>p.status===f);
+ let T={hp:0,hd:0,cp:0,cd:0};
+ const rows=ps.map(p=>{const s=stats(p);T.hp+=s.hp;T.hd+=s.hd;T.cp+=s.cp;T.cd+=s.cd;
+  return `<tr><td>${pad(p.id)}</td><td>${esc(p.name)}<div class="muted">${esc(p.client)}${p.opp?' · Opp. '+esc(p.opp):''}${p.conf?' · Conf. '+esc(p.conf):''}</div></td><td class="num">${nf.format(s.hp)}</td><td class="num">${nf.format(s.hd)}</td>${leftCell(s.hl,nf.format)}<td class="num">${fe(s.cp)}</td><td class="num">${fe(s.cd)}</td>${leftCell(s.cl,fe)}</tr>`;}).join('');
+ const hl=r2(T.hp-T.hd),cl=r2(T.cp-T.cd);
+ $('#s-report').innerHTML=`<div class="rep-head"><div><div class="rep-title">Report sintetico – Lavori ${f==='open'?'in corso':'chiusi'}</div><div class="muted">Falegnameria · Situazione ore e spese per lavoro</div></div><div class="bigdate">Alla data del ${fd(todayISO())}</div></div>
+ ${ps.length?`<table><tr><th>N.</th><th>Titolo</th><th class="num">Ore previste</th><th class="num">Ore lavorate</th><th class="num">Ore restanti / esubero</th><th class="num">Spese previste</th><th class="num">Spese sostenute</th><th class="num">Spese restanti / esubero</th></tr>${rows}
+ <tr class="tot"><td colspan="2">TOTALE (${ps.length} lavori)</td><td class="num">${nf.format(T.hp)}</td><td class="num">${nf.format(T.hd)}</td>${leftCell(hl,nf.format)}<td class="num">${fe(T.cp)}</td><td class="num">${fe(T.cd)}</td>${leftCell(cl,fe)}</tr></table>
+ <p class="muted">Le voci in rosso indicano ore o spese in esubero rispetto al previsto. Ore espresse in ore; spese in euro.</p>`:'<p class="muted">Nessun lavoro in questa categoria.</p>'}`;
+}
+
+/* ---------- report dettagliato ---------- */
+function renderDetail(){
+ const ps=sortedP();
+ if(!ps.some(p=>p.id===detailId))detailId=ps.length?ps[ps.length-1].id:null;
+ $('#d-project').innerHTML=ps.length?ps.map(p=>`<option value="${p.id}" ${p.id===detailId?'selected':''}>${esc(label(p))} – ${p.status==='open'?'IN CORSO':'CHIUSO'}</option>`).join(''):'<option value="">— nessun lavoro —</option>';
+ const p=getP(detailId);
+ if(!p){$('#d-report').innerHTML='<p class="muted">Nessun lavoro presente.</p>';$('#d-actions').innerHTML='';return;}
+ $('#d-actions').innerHTML=p.status==='closed'?`<button class="btn green" onclick="reopenProject(${p.id})">Riapri lavoro</button>`:`<button class="btn sec" onclick="goManage(${p.id})">Vai alla gestione</button><button class="btn red" onclick="closeProject(${p.id})">Chiudi lavoro</button>`;
+ const s=stats(p);
+ const byW={};p.hours.forEach(h=>byW[h.worker]=r2((byW[h.worker]||0)+h.hours));
+ const workers=Object.keys(byW).sort((a,b)=>a.localeCompare(b,'it'));
+ const byWhat={};p.expenses.forEach(e=>{const k=e.what;byWhat[k]=r2((byWhat[k]||0)+e.amount);});
+ const hs=p.hours.slice().sort((a,b)=>a.date.localeCompare(b.date));
+ const es=p.expenses.slice().sort((a,b)=>a.date.localeCompare(b.date));
+ const status=p.status==='open'?'IN CORSO':'CHIUSO il '+fd(p.closedDate);
+ $('#d-report').innerHTML=`
+ <div class="rep-head"><div><div class="rep-title">Report dettagliato lavoro N. ${pad(p.id)}</div><div style="font-size:17px;font-weight:600">${esc(p.name)}</div></div>
+  <div style="text-align:right"><div class="bigdate">Alla data del ${fd(todayISO())}</div><div>Stato: <b>${status}</b></div></div></div>
+ <p><b>Cliente:</b> ${esc(p.client)} &nbsp;·&nbsp; <b>Opportunità n.:</b> ${esc(p.opp)||'—'} &nbsp;·&nbsp; <b>Conferma d'ordine n.:</b> ${esc(p.conf)||'—'} &nbsp;·&nbsp; <b>Data inizio lavoro:</b> ${fd(p.start)}${p.status==='closed'?` &nbsp;·&nbsp; <b>Data chiusura:</b> ${fd(p.closedDate)}`:''}</p>
+
+ <h2>Confronto previsto / consuntivo</h2>
+ <table><tr><th></th><th class="num">Previsto</th><th class="num">Realizzato</th><th>Scostamento</th></tr>
+ <tr><td><b>Ore lavorazioni</b></td><td class="num">${fh(s.hp)}</td><td class="num">${fh(s.hd)}</td><td>${diffText(r2(s.hd-s.hp),fh,s.hp)}</td></tr>
+ <tr><td><b>Spese materiali</b></td><td class="num">${fe(s.cp)}</td><td class="num">${fe(s.cd)}</td><td>${diffText(r2(s.cd-s.cp),fe,s.cp)}</td></tr></table>
+
+ <h2>Ore per addetto</h2>
+ ${workers.length?`<table><tr><th>Addetto</th><th class="num">Ore svolte</th><th class="num">% sul totale</th></tr>${workers.map(w=>`<tr><td>${esc(w)}</td><td class="num">${nf.format(byW[w])}</td><td class="num">${s.hd>0?nf.format(byW[w]/s.hd*100):'0'}%</td></tr>`).join('')}<tr class="tot"><td>TOTALE ORE REALIZZATE</td><td class="num">${nf.format(s.hd)}</td><td class="num">100%</td></tr></table>`:'<p class="muted">Nessuna ora registrata.</p>'}
+ ${hs.length?`<h3>Dettaglio registrazioni ore</h3><table><tr><th>Data</th><th>Addetto</th><th class="num">Ore</th></tr>${hs.map(h=>`<tr><td>${fd(h.date)}</td><td>${esc(h.worker)}</td><td class="num">${nf.format(h.hours)}</td></tr>`).join('')}</table>`:''}
+
+ <h2>Spese sostenute</h2>
+ ${es.length?`<table><tr><th>Data</th><th>Di cosa si tratta</th><th>Fornitore</th><th>N. fattura</th><th>N. DDT</th><th class="num">Importo</th></tr>${es.map(e=>`<tr><td>${fd(e.date)}</td><td>${esc(e.what)}</td><td>${esc(e.supplier)}</td><td>${esc(e.invoice)}</td><td>${esc(e.ddt)}</td><td class="num">${fe(e.amount)}</td></tr>`).join('')}<tr class="tot"><td colspan="5">TOTALE SPESE SOSTENUTE</td><td class="num">${fe(s.cd)}</td></tr></table>
+ <h3>Riepilogo per tipologia</h3><table><tr><th>Tipologia</th><th class="num">Totale</th></tr>${Object.keys(byWhat).sort((a,b)=>a.localeCompare(b,'it')).map(k=>`<tr><td>${esc(k)}</td><td class="num">${fe(byWhat[k])}</td></tr>`).join('')}</table>`:'<p class="muted">Nessuna spesa registrata.</p>'}
+ `;
+}
+
+/* ---------- backup ---------- */
+function renderData(){
+ const nh=db.projects.reduce((a,p)=>a+p.hours.length,0),ne=db.projects.reduce((a,p)=>a+p.expenses.length,0);
+ $('#d-stats').textContent=`Dati attuali: ${db.projects.length} lavori, ${nh} registrazioni ore, ${ne} spese, ${db.workers.length} addetti, ${db.suppliers.length} fornitori.`;
+}
+function exportData(){
+ const blob=new Blob([JSON.stringify(db,null,1)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+ a.download='backup-falegnameria-'+todayISO()+'.json';document.body.appendChild(a);a.click();a.remove();
+}
+function importData(inp){
+ const f=inp.files[0];if(!f)return;
+ const r=new FileReader();
+ r.onload=async()=>{
+  try{
+   const d=JSON.parse(r.result);
+   if(!d||!Array.isArray(d.projects))throw new Error('formato');
+   if(!(await ask('Sostituire TUTTI i dati attuali'+(cloud?' (di tutti gli utenti)':'')+' con quelli del file di backup?'))){inp.value='';return;}
+   d.nextId=d.nextId||(Math.max(0,...d.projects.map(p=>p.id))+1);
+   d.workers=d.workers||[];d.whats=d.whats||[];d.suppliers=d.suppliers||[];
+   db=d;save();manageId=null;detailId=null;renderData();notify('Backup ripristinato.','ok');
+  }catch(e){notify('File di backup non valido.');}
+  inp.value='';
+ };
+ r.readAsText(f);
+}
+
+$('#hdr-date').textContent='Oggi: '+fd(todayISO());
+document.addEventListener('keydown',e=>{
+ if(e.key!=='Enter'||e.target.tagName!=='INPUT')return;
+ const f=e.target.closest('.frm');if(f&&typeof window[f.dataset.submit]==='function'){e.preventDefault();window[f.dataset.submit]();}
+});
+
+/* ================= MODALITÀ CONDIVISA (Firebase) ================= */
+let cloud=null,role='editor',lastFlash='',M={};
+const LOCAL_NOTE=`I dati sono salvati automaticamente in questo browser, su questo computer. Per sicurezza, <b>esporta regolarmente una copia di backup</b> e conservala in un'altra posizione. (Modalità locale: per condividere i dati con altri utenti configura <code>firebase-config.js</code>.)`;
+const CLOUD_NOTE=`I dati sono salvati nel database condiviso e tutti gli utenti autorizzati li vedono in tempo reale. Esporta comunque un backup ogni tanto per sicurezza.`;
+const _dm=drawManage;drawManage=function(f){lastFlash=f||'';return _dm(f);};
+async function newId(){
+ if(!cloud)return db.nextId++;
+ const {fsm,fs}=cloud,ref=fsm.doc(fs,'meta','counter');
+ try{return await fsm.runTransaction(fs,async tx=>{
+  const c=await tx.get(ref),n=Math.max(c.exists()?c.data().nextId:1,db.nextId);
+  tx.set(ref,{nextId:n+1});return n;});
+ }catch(e){notify('Impossibile creare il lavoro: serve la connessione a internet.');throw e;}
+}
+const sj=o=>JSON.stringify(o,Object.keys(o).sort());
+function flat(d){
+ const m={};
+ d.projects.forEach(p=>{const {hours,expenses,...r}=p;m['projects/'+p.id]=r;
+  hours.forEach(h=>m['hours/'+h.id]={...h,pid:p.id});
+  expenses.forEach(e=>m['expenses/'+e.id]={...e,pid:p.id});});
+ return m;
+}
+function cloudSync(){
+ if(role!=='editor')return;
+ const {fsm,fs}=cloud,a=flat(db),b=cloud.synced,ops=[];
+ for(const k in a)if(!b[k]||sj(a[k])!==sj(b[k]))ops.push(['set',k,JSON.parse(JSON.stringify(a[k]))]);
+ for(const k in b)if(!(k in a))ops.push(['del',k]);
+ cloud.synced=a;
+ const err=e=>notify('Errore di salvataggio: '+(e.code==='permission-denied'?'non hai i permessi di modifica.':e.message));
+ for(let i=0;i<ops.length;i+=400){
+  const bt=fsm.writeBatch(fs);
+  ops.slice(i,i+400).forEach(o=>{const [c,id]=o[1].split('/'),ref=fsm.doc(fs,c,id);o[0]==='set'?bt.set(ref,o[2]):bt.delete(ref);});
+  bt.commit().catch(err);
+ }
+ const L={};
+ ['workers','whats','suppliers'].forEach(f=>{const nw=db[f].filter(x=>!cloud.lists[f].includes(x));if(nw.length)L[f]=fsm.arrayUnion(...nw);cloud.lists[f]=db[f].slice();});
+ if(Object.keys(L).length)fsm.setDoc(fsm.doc(fs,'meta','lists'),L,{merge:true}).catch(err);
+ if(db.nextId>cloud.nextId){fsm.setDoc(fsm.doc(fs,'meta','counter'),{nextId:db.nextId}).catch(err);cloud.nextId=db.nextId;}
+}
+function rebuild(){
+ if(!M.p||!M.h||!M.e||!M.m)return;
+ const ps=M.p.map(p=>({...p,hours:[],expenses:[]})),by={};ps.forEach(p=>by[p.id]=p);
+ M.h.forEach(({pid,...h})=>{if(by[pid])by[pid].hours.push(h);});
+ M.e.forEach(({pid,...e})=>{if(by[pid])by[pid].expenses.push(e);});
+ const L=M.m.lists||{};
+ db={nextId:Math.max(1,(M.m.counter||{}).nextId||1,...ps.map(p=>p.id+1)),projects:ps,workers:L.workers||[],whats:L.whats||[],suppliers:L.suppliers||[]};
+ cloud.synced=flat(db);cloud.nextId=db.nextId;
+ cloud.lists={workers:db.workers.slice(),whats:db.whats.slice(),suppliers:db.suppliers.slice()};
+ if(!cloud.ready){cloud.ready=true;$('#gate').style.display='none';showTab(role==='editor'?'new':'list');}
+ else refreshView();
+}
+function refreshView(){
+ const t=document.querySelector('.tab.active');if(!t)return;
+ const k=t.id.slice(4);
+ if(k==='manage')renderManage(lastFlash);
+ else({new:renderNew,list:renderList,summary:renderSumReport,detail:renderDetail,data:renderData}[k]||function(){})();
+}
+function gate(msg,form,out){
+ $('#gate').style.display='flex';$('#gate-msg').textContent=msg;
+ $('#gate-form').style.display=form?'block':'none';$('#gate-out').style.display=out?'':'none';
+}
+async function doLogin(){
+ const em=$('#g-email').value.trim(),pw=$('#g-pass').value;
+ if(!em||!pw){notify('Inserisci email e password.');return;}
+ try{await cloud.AU.signInWithEmailAndPassword(cloud.auth,em,pw);}
+ catch(e){notify(/invalid|wrong|user-not-found/.test(e.code)?'Email o password errati.':'Errore di accesso: '+e.code);}
+}
+async function doReset(){
+ const em=$('#g-email').value.trim();
+ if(!em){notify('Scrivi prima la tua email.');return;}
+ try{await cloud.AU.sendPasswordResetEmail(cloud.auth,em);notify('Ti abbiamo inviato una email per reimpostare la password.','ok');}
+ catch(e){notify('Errore: '+e.code);}
+}
+async function doLogout(){try{await cloud.AU.signOut(cloud.auth);}catch(e){}location.reload();}
+async function startCloud(user){
+ const {fsm,fs}=cloud,em=(user.email||'').toLowerCase();
+ let acc=null;
+ try{const x=await fsm.getDoc(fsm.doc(fs,'config','access'));acc=x.exists()?x.data():null;}catch(e){}
+ const low=a=>(a||[]).map(v=>String(v).toLowerCase());
+ role=low(acc&&acc.editors).includes(em)?'editor':low(acc&&acc.viewers).includes(em)?'viewer':null;
+ if(!role){gate('L\'account '+em+' non è autorizzato. Chiedi all\'amministratore di aggiungere la tua email.',false,true);return;}
+ document.body.classList.toggle('viewer',role!=='editor');
+ $('#hdr-user').innerHTML='· '+esc(em)+' ('+(role==='editor'?'modifica':'sola lettura')+') <button class="btn sec sm" onclick="doLogout()">Esci</button>';
+ $('#mode-note').innerHTML=CLOUD_NOTE;
+ gate('Caricamento dati…',false,false);
+ const sub=(n,k,f)=>fsm.onSnapshot(fsm.collection(fs,n),sn=>{M[k]=f(sn);rebuild();},e=>notify('Errore di lettura dati: '+e.code));
+ sub('projects','p',sn=>sn.docs.map(d=>d.data()));
+ sub('hours','h',sn=>sn.docs.map(d=>d.data()));
+ sub('expenses','e',sn=>sn.docs.map(d=>d.data()));
+ sub('meta','m',sn=>{const o={};sn.docs.forEach(d=>o[d.id]=d.data());return o;});
+}
+async function boot(){
+ let cfg=null;
+ try{cfg=(await import('./firebase-config.js')).firebaseConfig;}catch(e){}
+ if(!cfg||!cfg.apiKey){$('#mode-note').innerHTML=LOCAL_NOTE;showWarn();showTab('new');return;}
+ db={nextId:1,projects:[],workers:[],whats:[],suppliers:[]};
+ gate('Caricamento…',false,false);
+ try{
+  const B='https://www.gstatic.com/firebasejs/10.12.2/';
+  const [A,AU,FS]=await Promise.all([import(B+'firebase-app.js'),import(B+'firebase-auth.js'),import(B+'firebase-firestore.js')]);
+  const app=A.initializeApp(cfg);let fsdb;
+  try{fsdb=FS.initializeFirestore(app,{localCache:FS.persistentLocalCache({tabManager:FS.persistentMultipleTabManager()})});}
+  catch(e){fsdb=FS.getFirestore(app);}
+  cloud={AU,fsm:FS,fs:fsdb,auth:AU.getAuth(app),synced:{},lists:{},nextId:1,ready:false};
+  AU.onAuthStateChanged(cloud.auth,u=>u?startCloud(u):gate('Accedi per continuare',true,false));
+ }catch(e){gate('Impossibile collegarsi al servizio online. Controlla la connessione e ricarica la pagina.',false,false);}
+}
+boot();
+</script>
+</body>
+</html>
